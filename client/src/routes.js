@@ -1,10 +1,8 @@
 import LandingPage from './pages/LandingPage.vue';
-import KoenigsbergPage from './pages/KoenigsbergPage.vue';
-import ForsteralmPage from './pages/ForsteralmPage.vue';
+import Bestenliste from './pages/Bestenliste.vue';
 
 export default [
     { path: '/', component: LandingPage},
-    { path: '/koenigsberg', component: KoenigsbergPage},
-    { path: '/forsteralm', component: ForsteralmPage},
+    { path: '/bestenliste', component: Bestenliste},
     { path: '*', component: LandingPage}
 ]
