@@ -2,17 +2,26 @@
     <div class="rankingPage">
         <b-card no-body>
                 <b-tabs pills card>
-                <b-tab title="Königsberg" active>
+                <b-tab title="Forsteralm" active>
                     <b-tabs pills card vertical nav-wrapper-class="w-20">
-                    <b-tab title="Lärchenschuss" active>
-                        <b-table striped hover :items="getRuns.filter(run => (run.track.track_name == 'Lärchenschuss'))" :fields="fields" />
-                    </b-tab>
-                    <b-tab title="Mausefalle">
-                        <b-table striped hover :items="getRuns.filter(run => (run.track.track_name == 'Mausefalle'))" :fields="fields" />
-                    </b-tab>
+                      <b-tab title="Lärchenschuss" active>
+                          <b-table striped hover :items="getRuns.filter(run => (run.track.track_name == 'Lärchenschuss'))" :fields="fields" />
+                      </b-tab>
+                      <b-tab title="Mausefalle">
+                          <b-table striped hover :items="getRuns.filter(run => (run.track.track_name == 'Mausefalle'))" :fields="fields" />
+                      </b-tab>
                     </b-tabs>
                 </b-tab>
-                <b-tab title="Forsteralm"><b-card-text>Keine Bestzeiten verfügbar</b-card-text></b-tab>
+                <b-tab title="Königsberg">
+                  <b-tabs pills card vertical nav-wrapper-class="w-20">
+                      <b-tab title="Sonnenhang" active>
+                          <b-table striped hover :items="getRuns.filter(run => (run.track.track_name == 'Sonnenhang'))" :fields="fields" />
+                      </b-tab>
+                      <b-tab title="Maisfeld">
+                          <b-text>Keine Bestzeiten verfügbar</b-text>
+                      </b-tab>
+                    </b-tabs>
+                </b-tab>
                 </b-tabs>
         </b-card>
     </div>

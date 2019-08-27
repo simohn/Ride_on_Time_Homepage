@@ -4,7 +4,7 @@ import { User } from "./entities/User";
 import { Run } from "./entities/Run";
 import { Track } from "./entities/Track";
 import { authentication, login, setup } from './auth';
-import { getUser, getUsers, getRunsForUser, createUser, createRun, getRuns, getTrack, createTrack, getTracksForPark, getRunsForTrack } from './business';
+import { getUser, getUsers, getRunsForUser, createUser, createRun, getRuns, getTrack, createTrack, getTracksForPark, getRunsForTrack, getRunsOnePerUser } from './business';
 import { Context, createContext } from './context';
 
 const typeDefs = `
@@ -20,6 +20,7 @@ const typeDefs = `
   type Run {
     id: ID!
     time: Float!
+    timeFormatted: String!
     user: User!
     track: Track!
   }
@@ -32,6 +33,7 @@ const typeDefs = `
   type Query {
     getUser(id: ID!): User
     getRuns: [Run!]
+    getRunsOnePerUser: [Run!]
     hello: String
     getUsers: [User!]!
     getTracksForPark(park_name: String!): [Track!]
@@ -64,6 +66,19 @@ const typeDefs = `
   }
 `;
 
+function centisecondsToTime(centi: number): String
+{
+      var centiseconds = centi % 100;
+      var seconds = Math.floor((centi / 100) % 60);
+      var minutes = Math.floor((centi / (60 * 100)) % 60);
+
+      return pad(minutes) + ":" + pad(seconds) + "." + pad(centiseconds);
+}
+
+function pad(d) {
+  return (d < 10) ? '0' + d.toString() : d.toString();
+}
+
 const resolvers = {
   Run: {
     user: async (source: Run, args, context: Context) => {
@@ -71,6 +86,9 @@ const resolvers = {
     },
     track: async (source: Run, args, context: Context) => {
       return getTrack(source.track_id)
+    },
+    timeFormatted: async (source: Run, args, context: Context) => {
+      return centisecondsToTime(source.time)
     }
   },
   User: {
@@ -105,6 +123,9 @@ const resolvers = {
     getRuns: async (_, {}) => {
      return getRuns()
     },
+    getRunsOnePerUser: async (_, {}) => {
+      return getRunsOnePerUser()
+     },
     getTracksForPark: async (source, { park_name }: { park_name: string }, context: Context) => { 
       return getTracksForPark(park_name);
     },
@@ -131,8 +152,8 @@ const resolvers = {
     addRun: async (_, { userId, time, track_id }: { userId: number, time: number, track_id:number}, context: Context) => {
 
       // Only allow an logged in user to add a run
-      if (!context.isAuthenticated()) {
-        throw new Error('Only logged in users can add a run')
+      if (!context.isAdmin()) {
+        throw new Error('Only admins can add a run')
       }
 
       // A user can only add a run for himself
