@@ -5,6 +5,7 @@ import { getUser, getUserByName } from './business';
 import { User } from './entities/User';
 import { Context } from './context';
 import { SECRET_KEY } from './config';
+
 var pgSession = require('connect-pg-simple')(session);
 
 const LocalStrategy = require('passport-local').Strategy;
@@ -31,7 +32,7 @@ export function setup(server: any) {
     }));
     server.use(passport.initialize());
     server.use(passport.session());
-
+    
     // This function gets the userId stored in the session and delivers the loaded user
     passport.deserializeUser(async (userId: any, next) => {
         const user = await getUser(userId);

@@ -1,9 +1,9 @@
 import { getRepository } from "typeorm";
 import { Track } from '../entities/Track';
 
-export async function getTracksForPark(park_name: string): Promise<Array<Track>> {
+export async function getTracksForPark(park_id: number): Promise<Array<Track>> {
     return getRepository(Track).createQueryBuilder("track")
-        .where("track.park_name = :park_name")
-        .setParameters({ park_name })
+        .where("track.park_id = :park_id")
+        .setParameters({ park_id })
         .getMany();
 }

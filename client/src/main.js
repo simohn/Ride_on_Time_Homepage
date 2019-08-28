@@ -12,7 +12,10 @@ import ApolloClient from "apollo-boost"
 Vue.config.productionTip = false
 
 const apolloClient = new ApolloClient({
-  uri: "http://localhost:4000"
+  uri: 'http://localhost:4000',
+  fetchOptions: {
+    credentials: 'include'
+  },
 })
 
 Vue.use(BootstrapVue);

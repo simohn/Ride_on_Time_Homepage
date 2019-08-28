@@ -1,14 +1,11 @@
 import { Entity, PrimaryGeneratedColumn, Column, BaseEntity } from "typeorm";
 
 @Entity()
-export class Track extends BaseEntity {
+export class Park extends BaseEntity {
   @PrimaryGeneratedColumn()
   id: number;
-
+  
   @Column()
-  track_name: string;
-
-  @Column()
-  park_id: number;
+  parkname: string;
 }
  

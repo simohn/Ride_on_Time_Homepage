@@ -3,8 +3,9 @@ import { createConnection } from "typeorm";
 import { User } from "./entities/User";
 import { Run } from "./entities/Run";
 import { Track } from "./entities/Track";
+import { Park } from "./entities/Park";
 import { authentication, login, setup } from './auth';
-import { getUser, getUsers, getRunsForUser, createUser, createRun, getRuns, getTrack, createTrack, getTracksForPark, getRunsForTrack, getRunsOnePerUser } from './business';
+import { getUser, getUsers, getRunsForUser, createUser, createRun, getRuns, getTrack, createTrack, getTracksForPark, getRunsForTrack, getRunsOnePerUser, getParks, getPark, createPark } from './business';
 import { Context, createContext } from './context';
 
 const typeDefs = `
@@ -23,11 +24,19 @@ const typeDefs = `
     timeFormatted: String!
     user: User!
     track: Track!
+    timestampTime: String!
+    timestampDate: String!
+    timestampDateTime: String!
   }
   type Track {
     id: ID!
     track_name: String!
-    park_name: String!
+    park: Park!
+  }
+  type Park {
+    id: ID!
+    parkname: String!
+    tracks: [Track!]
   }
   
   type Query {
@@ -36,9 +45,10 @@ const typeDefs = `
     getRunsOnePerUser: [Run!]
     hello: String
     getUsers: [User!]!
-    getTracksForPark(park_name: String!): [Track!]
+    getTracksForPark(park_id: ID!): [Track!]
     getRunsForTrack(track_id: ID!): [Run!]
-    
+    getParks: [Park!]
+
     me: User!
   }
   
@@ -60,9 +70,14 @@ const typeDefs = `
     addRun(time: Float!, userId: Int!, track_id: Int!): Run
   
     """
-    Adds a track for a given user
+    Adds a track
     """
-    addTrack(track_name: String!, park_name: String!): Track
+    addTrack(track_name: String!, park_id: ID!): Track
+
+    """
+    Adds a park
+    """
+    addPark(park_name: String!): Park
   }
 `;
 
@@ -82,18 +97,37 @@ function pad(d) {
 const resolvers = {
   Run: {
     user: async (source: Run, args, context: Context) => {
-      return getUser(source.user_id)
+      return getUser(source.user_id);
     },
     track: async (source: Run, args, context: Context) => {
-      return getTrack(source.track_id)
+      return getTrack(source.track_id);
     },
     timeFormatted: async (source: Run, args, context: Context) => {
-      return centisecondsToTime(source.time)
-    }
+      return centisecondsToTime(source.time);
+    },
+    timestampTime: async (source: Run, args, context: Context) => {
+      return source.timestampTime;
+    },
+    timestampDate: async (source: Run, args, context: Context) => {
+      return source.timestampDate;
+    },
+    timestampDateTime: async (source: Run, args, context: Context) => {
+      return source.timestampDate + " " + source.timestampTime;
+    },
   },
   User: {
     runs:  async (source: User, args, context: Context) => {
       return getRunsForUser(source.id)
+    }
+  },
+  Track: {
+    park:  async (source: Track, args, context: Context) => {
+      return getPark(source.park_id)
+    }
+  },
+  Park: {
+    tracks:  async (source: Park, args, context: Context) => {
+      return getTracksForPark(source.id)
     }
   },
   Query: {
@@ -126,12 +160,15 @@ const resolvers = {
     getRunsOnePerUser: async (_, {}) => {
       return getRunsOnePerUser()
      },
-    getTracksForPark: async (source, { park_name }: { park_name: string }, context: Context) => { 
-      return getTracksForPark(park_name);
+    getTracksForPark: async (source, { park_id }: { park_id: number }, context: Context) => { 
+      return getTracksForPark(park_id);
     },
     getRunsForTrack: async (source, { track_id }: { track_id: number }, context: Context) => { 
       return getRunsForTrack(track_id);
-    }
+    },
+    getParks: async (_, {}) => {
+      return getParks()
+     },
   },
   Mutation: 
   {
@@ -152,20 +189,24 @@ const resolvers = {
     addRun: async (_, { userId, time, track_id }: { userId: number, time: number, track_id:number}, context: Context) => {
 
       // Only allow an logged in user to add a run
-      if (!context.isAdmin()) {
-        throw new Error('Only admins can add a run')
-      }
+      //if (!context.isAdmin()) {
+        // throw new Error('Only admins can add a run')
+      //}
 
       // A user can only add a run for himself
-      if (context.user.id !== userId) {
-        throw new Error('You can only add a run for yourself')
-      }
+      //if (context.user.id !== userId) {
+        // new Error('You can only add a run for yourself')
+      //}
 
-      return createRun(time, userId, track_id)
+      return createRun(time, userId, track_id);
     },
-    addTrack: async (_, { track_name, park_name }: { track_name: string, park_name: string}, context: Context) => {
+    addTrack: async (_, { track_name, park_id }: { track_name: string, park_id: number}, context: Context) => {
 
-      return createTrack(track_name, park_name)
+      return createTrack(track_name, park_id);
+    },
+    addPark: async (_, { park_name }: { park_name: string}, context: Context) => {
+
+      return createPark(park_name);
     }
   }
 };
@@ -176,7 +217,7 @@ setup(server);
 
 createConnection()
   .then(() => {
-    server.start(() => console.log("Server is running on localhost:4000"));
+    server.start({cors: {credentials: true, origin: "http://localhost:8080"}}, () => console.log("Server is running on localhost:4000"));
   })
   .catch((error) => {
     console.log("Couldn't connect to the database.", error);

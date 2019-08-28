@@ -13,5 +13,11 @@ export class Run extends BaseEntity {
   
   @Column()
   track_id: number;
+
+  @Column()
+  timestampTime: string;
+
+  @Column()
+  timestampDate: string;
 }
  
