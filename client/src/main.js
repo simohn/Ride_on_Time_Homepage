@@ -5,18 +5,27 @@ import App from './App.vue'
 import BootstrapVue from 'bootstrap-vue'
 import 'bootstrap/dist/css/bootstrap.css'
 import 'bootstrap-vue/dist/bootstrap-vue.css'
+import store from './store'
 
 import VueApollo from 'vue-apollo'
-import ApolloClient from "apollo-boost"
 
-Vue.config.productionTip = false
+import { InMemoryCache } from 'apollo-cache-inmemory';
+import { createHttpLink } from 'apollo-link-http';
+import { ApolloClient } from 'apollo-client';
+
+const backendUrl = 'http://localhost:4000';
+
+Vue.config.productionTip = false;
+
+const link = createHttpLink({
+  uri: backendUrl,
+  credentials: 'include'
+});
 
 const apolloClient = new ApolloClient({
-  uri: 'http://localhost:4000',
-  fetchOptions: {
-    credentials: 'include'
-  },
-})
+  link,
+  cache: new InMemoryCache(),
+});
 
 Vue.use(BootstrapVue);
 Vue.use(VueApollo);
@@ -35,5 +44,6 @@ new Vue({
   el: '#app',
   apolloProvider,
   render: h => h(App),
-  router: router
+  router: router,
+  store
 }).$mount('#app')

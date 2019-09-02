@@ -1,126 +1,44 @@
 <template>
-    <!--
     <div class="userbereichPage">
-        <b-tabs pills card vertical>
-            <b-tab title="Bestzeiten" active>
-                <b-card no-body>
-                    <b-tabs pills card>
-                        <b-tab title="Forsteralm" active>
-                            <b-tabs pills card vertical nav-wrapper-class="w-20">
-                                <b-tab title="Lärchenschuss" active>
-                                    <b-table 
-                                        id="myTable"
-                                        striped 
-                                        hover 
-                                        :current-page="currentPage"
-                                        :per-page="perPage"
-                                        :items="runsLaerchenschuss"
-                                        :fields="fields" />
-                                </b-tab>
-                                <b-tab title="Mausefalle">
-                                    <b-table striped hover :items="getUser.runs.filter(run => (run.track.track_name == 'Mausefalle'))" :fields="fields" />
-                                </b-tab>
-                            </b-tabs>
-                        </b-tab>
+        <b-tabs v-model="tabParkIndex" small card>
+            <b-tab v-for="(item1, index1) in getParks" 
+                    :key="index1"
+                    v-on:click="onParkTabChange"
+                    :title="item1.parkname">
 
-                        <b-tab title="Königsberg">
-                            <b-tabs pills card vertical nav-wrapper-class="w-20">
-                                <b-tab title="Sonnenhang">
-                                    <b-table striped hover :items="getUser.runs.filter(run => (run.track.track_name == 'Sonnenhang'))" :fields="fields" />
-                                </b-tab>
-                                <b-tab title="Maisfeld">
-                                    <b-table striped hover :items="getUser.runs.filter(run => (run.track.track_name == 'Maisfeld'))" :fields="fields" />
-                                </b-tab>
-                            </b-tabs>
-                        </b-tab>
-                    </b-tabs>
-                </b-card>
-            </b-tab>
-
-            <b-tab title="Account"> 
-                
-            </b-tab>
-        </b-tabs>
-
-        <b-container fluid>
-            <b-row>
-                <b-col sm="5" md="6" class="my-1">
-                    <b-form-group
-                    label="Per page"
-                    label-cols-sm="6"
-                    label-cols-md="4"
-                    label-cols-lg="3"
-                    label-align-sm="right"
-                    label-size="sm"
-                    label-for="perPageSelect"
-                    class="mb-0"
-                    >
-                    <b-form-select
-                        v-model="perPage"
-                        id="perPageSelect"
-                        size="sm"
-                        :options="pageOptions"
-                    ></b-form-select>
-                    </b-form-group>
-                </b-col>
-
-                <b-col sm="7" md="6" class="my-1">
-                    <b-pagination
-                    v-model="currentPage"
-                    :total-rows="totalRows"
-                    :per-page="perPage"
-                    align="fill"
-                    size="sm"
-                    class="my-0"
-                    aria-controls="myTable"
-                    ></b-pagination>
-                </b-col>
-            </b-row>
-
-        </b-container>
-
-    </div> -->
-
-    <div class="userbereichPage">
-        <!--
-        <ul>
-            <li v-for="(item, index) in getParks" :key="index"> {{ item.parkname }} </li>
-        </ul>
-        -->
-
-        <template v-if="isLoaded">
-            <b-card no-body>
-                <b-tabs pills card>
-                    <b-tab v-for="(item, index) in getParks" :key="index" :title="item.parkname">
-                        <b-tabs pills card vertical nav-wrapper-class="w-20">
-                            <b-tab :v-for="item2 in item.tracks" :title="item2.track_name">
-                                <b-table
-                                    :items="runsLaerchenschuss"
-                                    :fields="fields" />
-                            </b-tab>
-                        </b-tabs>
+                <b-tabs v-model="tabTrackIndex" small pills>
+                    <b-tab
+                        v-for="(item2, index2) in item1.tracks"
+                        :title="item2.track_name"
+                        :key="index2"
+                        v-on:click="onTrackTabChange">
                     </b-tab>
                 </b-tabs>
-            </b-card>
-        </template>
+            </b-tab>
+        </b-tabs>
+        
+        <b-table v-if="loaded" :items="runs" :fields="fields" />
     </div>
 </template>
 
 <script>
 import gql from 'graphql-tag'
 
-export const GET_USERS = gql`{
-    getUser(id:33) {
+export const GET_USER = gql`{
+    getUser(id: 33) {
         id
+        username
         runs {
             timeFormatted
             timestampDate
             timestampTime
-            track
-            {
+            track {
                 track_name
+                park {
+                    parkname
+                }
             }
-        }   
+        }
     }
 }`;
 
@@ -154,23 +72,30 @@ export default {
                     sortable: true
                 }
             },
-            totalRows: 1,
-            currentPage: 1,
-            perPage: 5,
-            pageOptions: [5, 10, 15],
             getUser: [],
             getParks: [],
-            isLoaded: false
+            runs: [],
+            tabParkIndex: 0,
+            tabTrackIndex: 0,
+            userReceived: false,
+            parksReceived: false,
+            loaded: false,
+            userData: [],
+            parksSkeleton: []
         }
     },
     apollo: {
         getUser: {
-            query: GET_USERS,
-            manual: true,
+            query: GET_USER,
             result ({ data, loading }) {
-                console.log('We got some result!');
-                console.log(data.getUser);
-                this.getUser = data.getUser;
+                console.log('getUser received!');
+                this.userReceived = true;
+
+                if((this.userReceived && this.parksReceived) && !this.loaded)
+                {
+                    this.calcParksSkeleton();
+                    this.loaded = true;
+                }
             },
             error (error) {
                 console.error('We\'ve got an error!', error)
@@ -178,28 +103,49 @@ export default {
         },
         getParks: {
             query: GET_PARKS,
-            manual: true,
             result ({ data, loading }) {
-                console.log('We got some result!');
-                console.log(data.getParks);
-                this.getParks = data.getParks;
-                this.isLoaded = true;
+                console.log('getParks received!');
+                this.parksReceived = true;
+
+                if((this.userReceived && this.parksReceived) && !this.loaded)
+                {
+                    this.calcParksSkeleton();
+                    this.loaded = true;
+                }
             },
             error (error) {
                 console.error('We\'ve got an error!', error)
             }
         }
     },
-    mounted() {
-      // Set the initial number of items
-      this.totalRows = this.getUser.runs.length;
-    },
-    computed: {
-        runsLaerchenschuss: function () {
-            return this.getUser.runs.filter(run => (run.track.track_name == 'T1'))
+    methods: {
+        onParkTabChange: function() {
+            this.tabTrackIndex = 0;
+            this.updateRunsObject();
         },
-        parks: function () {
-            return this.getParks.parkname;
+        onTrackTabChange: function() {
+            this.updateRunsObject();
+        },
+        updateRunsObject: function() {
+            var parkname = this.getParks[this.tabParkIndex].parkname;
+            var trackname = this.getParks[this.tabParkIndex].tracks[this.tabTrackIndex].track_name;
+            this.runs = this.getUser.runs.filter(run => (run.track.track_name == trackname && run.track.park.parkname == parkname));
+        },
+        calcParksSkeleton: function() {
+            this.getParks.forEach(park => {
+                park.tracks.forEach(track => {
+                    var runsTemp = this.getUser.runs.filter(run => (run.track.track_name == track.track_name && run.track.park.parkname == park.parkname));
+                    
+                    if(runsTemp.length == 0)
+                    {
+                        //track.hasRuns = false;
+                    }
+                    else
+                    {
+                        //track.hasRuns = true;
+                    }
+                });
+            });
         }
     }
   }
@@ -207,6 +153,6 @@ export default {
 
 <style>
 .userbereichPage {
-    margin-top: 56px;
+    margin-top: 40px;
 }
 </style>

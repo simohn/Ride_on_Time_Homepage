@@ -7,45 +7,14 @@
             <b-collapse is-nav id="nav_collapse">
                 <b-navbar-nav>
                     <b-nav-item href="/bestenliste">Bestenliste</b-nav-item>
-                    <b-nav-item href="/userbereich">Userbereich</b-nav-item>
                 </b-navbar-nav>
 
-                <!-- Right aligned nav items -->
                 <b-navbar-nav class="ml-auto">
-                    <b-dropdown text="Registrieren" ref="ddownReg" right>
-                        <b-dropdown-form>
-                            <b-form-group label="Benutzername">
-                                <b-form-input size="sm" v-model="form.usernameReg" placeholder="A.Musterfrau">
-                                </b-form-input>
-                            </b-form-group>
-
-                            <b-form-group label="Vorname">
-                                <b-form-input size="sm" v-model="form.firstnameReg" placeholder="Anna">
-                                </b-form-input>
-                            </b-form-group>
-
-                            <b-form-group label="Nachname">
-                                <b-form-input size="sm" v-model="form.lastnameReg" placeholder="Musterfrau">
-                                </b-form-input>
-                            </b-form-group>
-                            
-                            <b-form-group label="Email">
-                                <b-form-input size="sm" v-model="form.emailReg" placeholder="email@bsp.com">
-                                </b-form-input>
-                            </b-form-group>
-
-                            <b-form-group label="Passwort">
-                                <b-form-input type="password" v-model="form.passwordReg" size="sm" placeholder="Passwort">
-                                </b-form-input>
-                            </b-form-group>
-
-                            <b-button variant="primary" size="sm" @click="registerUser">Registrieren</b-button>
-                        </b-dropdown-form>
-                    </b-dropdown>
+                    <b-button v-if="!loggedIn" variant="info" href="/registrierung">Registrieren</b-button>
 
                     &nbsp;
 
-                    <b-dropdown text="Login" ref="ddownLog" right>
+                    <b-dropdown v-if="!loggedIn" text="Login" ref="ddownLogin" right>
                         <b-dropdown-form>
                             <b-form-group label="Benutzername">
                                 <b-form-input size="sm" v-model="form.usernameLog" placeholder="email@example.com">
@@ -60,6 +29,11 @@
                             <b-button variant="primary" size="sm" @click="loginUser">Login</b-button>
                         </b-dropdown-form>
                     </b-dropdown>
+
+                    <b-dropdown v-if="loggedIn" ref="ddownLogout" :text="userName" right>
+                        <b-dropdown-item href="/userbereich">Userbereich</b-dropdown-item>
+                        <b-dropdown-item-button v-on:click="logoutUser">Logout</b-dropdown-item-button>
+                    </b-dropdown>
                 </b-navbar-nav>
             </b-collapse>
         </b-navbar>
@@ -68,19 +42,12 @@
 
 <script>
 import gql from 'graphql-tag'
-
-const registerMutation = gql`
-    mutation registerUser ($username: String!, $first_name: String!, $last_name : String!, $email : String!, $password : String!) {
-        register(username: $username, first_name: $first_name, last_name: $last_name, email: $email, password: $password) {
-            id
-            username
-        }
-}`;
+import { mapState, mapMutations } from 'vuex'
 
 const loginMutation = gql`
     mutation login($username: String!, $password: String!) {
         login(username: $username, password: $password) {
-            id
+            username
     }
 }`;
 
@@ -89,50 +56,13 @@ export default {
     data() {
       return {
         form: {
-            usernameReg: '',
-            firstnameReg: '',
-            lastnameReg: '',
-            emailReg: '',
-            passwordReg: '',
-
             usernameLog: '',
             passwordLog: ''
-        }
+        },
+        loginData: {}
       }
     },
     methods: {
-        onClickReg() {
-        this.$refs.ddownReg.hide(true)
-        },
-        onClickLog() {
-            this.$refs.ddownLog.hide(true)
-        },
-        registerUser () {
-            this.$apollo.mutate({
-                mutation: registerMutation,
-                variables: {
-                    username : this.form.usernameReg,
-                    first_name : this.form.firstnameReg,
-                    last_name : this.form.lastnameReg,
-                    email : this.form.emailReg,
-                    password : this.form.passwordReg
-                }
-            })
-            .then(data => {
-                this.form.usernameReg = '';
-                this.form.firstnameReg = '';
-                this.form.lastnameReg = '';
-                this.form.emailReg = '';
-                this.form.passwordReg = '';
-
-                console.log(data);
-            })
-            .catch(error => {
-                console.log(error);
-            });
-
-            this.onClickReg();
-        },
         loginUser () {
             this.$apollo.mutate({
                 mutation: loginMutation,
@@ -145,15 +75,35 @@ export default {
                 this.form.usernameLog = '';
                 this.form.passwordLog = '';
 
-                console.log(data);
+                this.$refs.ddownLogin.hide(true);
+                this.loginData = data.data;
+
+                this.setLoginData();
             })
             .catch(error => {
                 console.log(error);
             });
+        },
+        logoutUser() {
+            this.$refs.ddownLogout.hide(true);
 
-            this.onClickLog();
+            this.resetLoginData();
+        },
+        ...mapMutations([
+            'SET_LOGIN_DATA',
+            'RESET_LOGIN_DATA'
+        ]),
+        setLoginData: function() {
+            this.SET_LOGIN_DATA(this.loginData);
+        },
+        resetLoginData: function() {
+            this.RESET_LOGIN_DATA();
         }
-    }
+    },
+    computed: mapState([
+            'loggedIn',
+            'userName'
+    ]),
 }
 </script>
 

@@ -49,7 +49,7 @@ const typeDefs = `
     getRunsForTrack(track_id: ID!): [Run!]
     getParks: [Park!]
 
-    me: User!
+    me: User
   }
   
   type Mutation {
@@ -215,9 +215,14 @@ const server = new GraphQLServer({ typeDefs, resolvers, context: createContext }
 
 setup(server);
 
+const corsOptions = {
+  origin: "http://localhost:8080",
+  credentials: true
+};
+
 createConnection()
   .then(() => {
-    server.start({cors: {credentials: true, origin: "http://localhost:8080"}}, () => console.log("Server is running on localhost:4000"));
+    server.start({cors: corsOptions}, () => console.log("Server is running on localhost:4000"));
   })
   .catch((error) => {
     console.log("Couldn't connect to the database.", error);
