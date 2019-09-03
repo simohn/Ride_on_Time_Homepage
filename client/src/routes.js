@@ -1,6 +1,6 @@
 import LandingPage from './pages/LandingPage.vue';
 import Bestenliste from './pages/Bestenliste.vue';
-import Userbereich from './pages/Userbereich1.vue';
+import Userbereich from './pages/Userbereich.vue';
 import RegisterPage from './pages/RegisterPage.vue';
 
 export default [

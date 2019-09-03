@@ -3,15 +3,16 @@
         <b-tabs v-model="tabParkIndex" small card>
             <b-tab v-for="(item1, index1) in getParks" 
                     :key="index1"
-                    v-on:click="onParkTabChange"
+                    v-on:click="updateRunsObject"
                     :title="item1.parkname">
 
-                <b-tabs v-model="tabTrackIndex" small pills>
+                <b-tabs v-model="getParks[index1].tabTrackIndex" small pills>
                     <b-tab
                         v-for="(item2, index2) in item1.tracks"
                         :title="item2.track_name"
                         :key="index2"
-                        v-on:click="onTrackTabChange">
+                        v-on:click="updateRunsObject"
+                        :disabled="!getParks[index1].tracks[index2].hasRuns">
                     </b-tab>
                 </b-tabs>
             </b-tab>
@@ -91,9 +92,10 @@ export default {
                 console.log('getUser received!');
                 this.userReceived = true;
 
-                if((this.userReceived && this.parksReceived) && !this.loaded)
+                if(this.userReceived && this.parksReceived)
                 {
                     this.calcParksSkeleton();
+                    this.updateRunsObject();
                     this.loaded = true;
                 }
             },
@@ -107,9 +109,10 @@ export default {
                 console.log('getParks received!');
                 this.parksReceived = true;
 
-                if((this.userReceived && this.parksReceived) && !this.loaded)
+                if(this.userReceived && this.parksReceived)
                 {
                     this.calcParksSkeleton();
+                    this.updateRunsObject();
                     this.loaded = true;
                 }
             },
@@ -119,31 +122,35 @@ export default {
         }
     },
     methods: {
-        onParkTabChange: function() {
-            this.tabTrackIndex = 0;
-            this.updateRunsObject();
-        },
-        onTrackTabChange: function() {
-            this.updateRunsObject();
-        },
         updateRunsObject: function() {
             var parkname = this.getParks[this.tabParkIndex].parkname;
-            var trackname = this.getParks[this.tabParkIndex].tracks[this.tabTrackIndex].track_name;
+            var trackname = this.getParks[this.tabParkIndex].tracks[this.getParks[this.tabParkIndex].tabTrackIndex].track_name;
             this.runs = this.getUser.runs.filter(run => (run.track.track_name == trackname && run.track.park.parkname == parkname));
         },
         calcParksSkeleton: function() {
             this.getParks.forEach(park => {
+                var tabTrackIndexSet = false;
+                var tabTrackIndex = 0;
+
                 park.tracks.forEach(track => {
                     var runsTemp = this.getUser.runs.filter(run => (run.track.track_name == track.track_name && run.track.park.parkname == park.parkname));
                     
                     if(runsTemp.length == 0)
                     {
-                        //track.hasRuns = false;
+                        track.hasRuns = false;
                     }
                     else
                     {
-                        //track.hasRuns = true;
+                        track.hasRuns = true;
+
+                        if(!tabTrackIndexSet)
+                        {
+                            park.tabTrackIndex = tabTrackIndex;
+                            tabTrackIndexSet = true;
+                        }
                     }
+
+                    tabTrackIndex++;
                 });
             });
         }
