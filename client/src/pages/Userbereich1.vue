@@ -2,7 +2,7 @@
     <div class="userbereich1Page">
         <b-tabs v-if="loaded" v-model="tabParkIndex" small card>
             <b-tab v-on:click="onParkTabChange" title="Forsteralm">
-                <b-tabs v-model="tabTrackIndex" small pills>
+                <b-tabs v-model="getParks[0].tabTrackIndex" small pills>
                     <b-tab title="Lärchenschuss" 
                            v-on:click="onTrackTabChange"
                            :disabled="!getParks[0].tracks[0].hasRuns"></b-tab>
@@ -15,16 +15,23 @@
                 </b-tabs>
             </b-tab>
             <b-tab v-on:click="onParkTabChange" title="Königsberg">
-                <b-tabs v-model="tabTrackIndex" small pills>
+                <b-tabs v-model="getParks[1].tabTrackIndex" small pills>
                     <b-tab title="Kurvenkogel" 
-                           v-on:click="onTrackTabChange"></b-tab>
-                    <b-tab title="S-Line" v-on:click="onTrackTabChange"></b-tab>
+                           v-on:click="onTrackTabChange"
+                           :disabled="!getParks[1].tracks[0].hasRuns"></b-tab>
+                    <b-tab title="S-Line" 
+                           v-on:click="onTrackTabChange"
+                           :disabled="!getParks[1].tracks[1].hasRuns"></b-tab>
                 </b-tabs>
             </b-tab>
             <b-tab v-on:click="onParkTabChange" title="Saalbach">
-                <b-tabs v-model="tabTrackIndex" small pills>
-                    <b-tab title="Z-Line" v-on:click="onTrackTabChange"></b-tab>
-                    <b-tab title="Buchenwald" v-on:click="onTrackTabChange"></b-tab>
+                <b-tabs v-model="getParks[2].tabTrackIndex" small pills>
+                    <b-tab title="Z-Line" 
+                           v-on:click="onTrackTabChange"
+                           :disabled="!getParks[2].tracks[0].hasRuns"></b-tab>
+                    <b-tab title="Buchenwald" 
+                           v-on:click="onTrackTabChange"
+                           :disabled="!getParks[2].tracks[1].hasRuns"></b-tab>
                 </b-tabs>
             </b-tab>
         </b-tabs>
@@ -88,11 +95,11 @@ export default {
             runs: [],
             tabParkIndex: 0,
             tabTrackIndex: 0,
+            tabTrackIndex1: 0,
             userReceived: false,
             parksReceived: false,
             loaded: false,
-            userData: [],
-            parksSkeleton: []
+            userData: []
         }
     },
     apollo: {
@@ -133,7 +140,7 @@ export default {
     },
     methods: {
         onParkTabChange: function() {
-            this.tabTrackIndex = 0;
+            // this.tabTrackIndex = 0;
             this.updateRunsObject();
         },
         onTrackTabChange: function() {
@@ -141,7 +148,7 @@ export default {
         },
         updateRunsObject: function() {
             var parkname = this.getParks[this.tabParkIndex].parkname;
-            var trackname = this.getParks[this.tabParkIndex].tracks[this.tabTrackIndex].track_name;
+            var trackname = this.getParks[this.tabParkIndex].tracks[this.getParks[this.tabParkIndex].tabTrackIndex].track_name;
             this.runs = this.getUser.runs.filter(run => (run.track.track_name == trackname && run.track.park.parkname == parkname));
         },
         hasTrackRuns: function() {
@@ -149,6 +156,9 @@ export default {
         },
         calcParksSkeleton: function() {
             this.getParks.forEach(park => {
+                var tabTrackIndexSet = false;
+                var tabTrackIndex = 0;
+
                 park.tracks.forEach(track => {
                     var runsTemp = this.getUser.runs.filter(run => (run.track.track_name == track.track_name && run.track.park.parkname == park.parkname));
                     
@@ -159,7 +169,15 @@ export default {
                     else
                     {
                         track.hasRuns = true;
+
+                        if(!tabTrackIndexSet)
+                        {
+                            park.tabTrackIndex = tabTrackIndex;
+                            tabTrackIndexSet = true;
+                        }
                     }
+
+                    tabTrackIndex++;
                 });
             });
         }
