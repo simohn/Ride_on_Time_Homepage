@@ -4,7 +4,8 @@
             <b-tab v-for="(item1, index1) in getParks" 
                     :key="index1"
                     v-on:click="updateRunsObject"
-                    :title="item1.parkname">
+                    :title="item1.parkname"
+                    :disabled="!getParks[index1].hasTrackWithRun">
 
                 <b-tabs v-model="getParks[index1].tabTrackIndex" small pills>
                     <b-tab
@@ -81,7 +82,6 @@ export default {
             userReceived: false,
             parksReceived: false,
             loaded: false,
-            userData: [],
             parksSkeleton: []
         }
     },
@@ -152,6 +152,15 @@ export default {
 
                     tabTrackIndex++;
                 });
+
+                if(tabTrackIndexSet == true)
+                {
+                    park.hasTrackWithRun = true;
+                }
+                else
+                {
+                    park.hasTrackWithRun = false;
+                } 
             });
         }
     }
