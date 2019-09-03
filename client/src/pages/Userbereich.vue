@@ -1,6 +1,6 @@
 <template>
     <div class="userbereichPage">
-        <b-tabs v-model="tabParkIndex" small card>
+        <b-tabs v-if="loaded" v-model="tabParkIndex" small card>
             <b-tab v-for="(item1, index1) in getParks" 
                     :key="index1"
                     v-on:click="updateRunsObject"
@@ -78,7 +78,6 @@ export default {
             getParks: [],
             runs: [],
             tabParkIndex: 0,
-            tabTrackIndex: 0,
             userReceived: false,
             parksReceived: false,
             loaded: false,
@@ -94,6 +93,7 @@ export default {
 
                 if(this.userReceived && this.parksReceived)
                 {
+                    console.log('Calc skeleton');
                     this.calcParksSkeleton();
                     this.updateRunsObject();
                     this.loaded = true;
@@ -111,6 +111,7 @@ export default {
 
                 if(this.userReceived && this.parksReceived)
                 {
+                    console.log('Calc skeleton');
                     this.calcParksSkeleton();
                     this.updateRunsObject();
                     this.loaded = true;
