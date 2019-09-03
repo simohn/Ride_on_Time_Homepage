@@ -36,8 +36,6 @@
     data() {
       return {
       }
-    },
-    methods: {
     }
   }
 </script>

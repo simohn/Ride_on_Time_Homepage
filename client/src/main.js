@@ -13,9 +13,13 @@ import { InMemoryCache } from 'apollo-cache-inmemory';
 import { createHttpLink } from 'apollo-link-http';
 import { ApolloClient } from 'apollo-client';
 
-const backendUrl = 'http://localhost:4000';
+Vue.use(BootstrapVue);
+Vue.use(VueApollo);
+Vue.use(VueRouter);
 
 Vue.config.productionTip = false;
+
+const backendUrl = 'http://localhost:4000';
 
 const link = createHttpLink({
   uri: backendUrl,
@@ -26,10 +30,6 @@ const apolloClient = new ApolloClient({
   link,
   cache: new InMemoryCache(),
 });
-
-Vue.use(BootstrapVue);
-Vue.use(VueApollo);
-Vue.use(VueRouter);
 
 const apolloProvider = new VueApollo({
   defaultClient: apolloClient
